@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+    <meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>blockchain Demo</title>
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<!-- jQuery library -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<!-- Latest compiled JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<style>
+		body {
+			margin: 0;
+			LINE-HEIGHT:30px; 
+		}
+		.col-sm-2{
+			margin: 0;
+		}
+		#oneblock1
+		{% for block in c %}
+		,#oneblock{{ block.BlockID}}
+		{% endfor %}
+		{
+			position:relative;
+			top:70px;
+			padding: 5px;
+			border:solid;
+			border-color:blue;
+		}
+		#oneblock{{count+1}}{
+			position:relative;
+			top:70px;
+			padding: 5px;
+			border:solid;
+			border-color:black;
+		}
+		.row{
+			margin:0;
+		}
+		input{
+			letter-spacing:	0.5px;
+		}
+		button{
+			text-align:center;
+		}
+		.disabled {
+		  opacity: 0.8;
+		  cursor: not-allowed;
+		}
+		</style>
+		<script src="{{ url_for( 'static' ,filename='./js/blockchain.js')}}"></script>
+		<script>
+				$(function() { 
+					$("#calculate .btn").click(function(){
+						$(this).button('loading').delay(100).queue(function() {
+							calculate();
+							check();
+							$(this).button('reset');
+							$(".nodata").removeAttr('id')
+							$(this).dequeue();
+						});        
+					});
+				});
+				$(function() { 
+					$(".dbdata").click(function(){
+						alert("You can't change data in blockchain");    
+					});
+				});
+				$(function() { 
+					$(".nodata").click(function(){
+						if(document.getElementById("oneblock{{count+1}}").style.borderColor==="blue"){
+						}
+						else{
+							alert("Somethings wrong, please click calculate ! ");
+						}
+					});
+				}); 		
+		</script>
+		<script>
+				function hash(){
+					{% for block in c %}
+					var block{{ block.BlockID}} = document.getElementById('block{{ block.BlockID}}').value;
+					var timestamp{{ block.BlockID}} = document.getElementById('timestamp{{ block.BlockID}}').value;
+					var nonce{{ block.BlockID}} = document.getElementById('nonce{{ block.BlockID}}').value;
+					var data{{ block.BlockID}} = document.getElementById('data{{ block.BlockID}}').value;
+					var preoutput{{ block.BlockID}} = document.getElementById('preoutput{{ block.BlockID}}').value;
+					var input{{ block.BlockID}} = block{{ block.BlockID}} + timestamp{{ block.BlockID}} + nonce{{ block.BlockID}} + data{{ block.BlockID}} + preoutput{{ block.BlockID}};
+					if(document.getElementById('output{{ block.BlockID}}').value == sha256(input{{ block.BlockID}})){
+						document.getElementById("oneblock{{ block.BlockID}}").style.borderColor="blue";
+					}else{
+						document.getElementById("oneblock{{ block.BlockID}}").style.borderColor="red";
+					}
+					if(document.getElementById("oneblock{{ block.BlockID-1}}").style.borderColor=="red"){
+						document.getElementById("oneblock{{ block.BlockID}}").style.borderColor="red";
+					}
+					{% endfor %}
+					
+					setTimeout('hash()',100);
+					setTimeout('ShowTime()',1000);
+				}
+				function ShowTime(){
+				　var NowDate=new Date();
+				　var h=NowDate.getHours();
+				　var m=NowDate.getMinutes();
+				　var s=NowDate.getSeconds();
+				  var year=NowDate.getFullYear();
+				  var month=NowDate.getMonth()+1;
+				  var date=NowDate.getDate();
+				  if(h<10){
+					h="0"+h;
+				  }
+				  if(m<10){
+					m="0"+m;
+				  }
+				  if(s<10){
+					s="0"+s;
+				  }
+				  if(month<10){
+					month="0"+month;
+				  }
+				  if(date<10){
+					date="0"+date;
+				  }
+				　document.getElementById('nowtime').innerHTML = year+ "-" + month + "-" + date + " " + h+':'+m+':'+s;
+					setTimeout('ShowTime()',1000);
+				}
+			</script>
+	</head>
+	<body onload="hash()" >
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-0 col-md-1" id="oneblock0">
+					<h1><a href={{ url_for('index') }}>BlockChain</a></h1>
+					<div id="nowtime"></div>
+				</div>
+				{% for block in c %}
+				<div class="col-sm-3 col-md-2">
+					<div id="oneblock{{ block.BlockID}}">
+						Block : <input id="block{{ block.BlockID}}" class="form-control disabled" readonly="readonly" rows="1" value="{{ block.BlockID}}"></input>
+						TimeStamp : <input id="timestamp{{ block.BlockID}}" class="form-control disabled" rows="1" readonly="readonly" value="{{block.TimeStamp}}"></input>
+						Nonce : <input id="nonce{{ block.BlockID}}" class="form-control" rows="1" value="{{block.Nonce}}"></input>
+						Data : <textarea id="data{{ block.BlockID}}" class="form-control" rows="5">{{block.Data}}</textarea>
+						<br>
+						<button class="btn btn-block disabled dbdata">calculate</button>
+						prehash : <input id="preoutput{{ block.BlockID}}" class="form-control disabled" readonly="readonly" rows="1" style="text-align: center" value="{{block.Prehash}}"></input>
+						hash : <input id="output{{ block.BlockID}}" class="form-control disabled" readonly="readonly" rows="1" style="text-align: center" value="{{block.Hash}}"></input>
+					</div>
+				</div>
+				{% endfor %}
+				<div class="col-sm-3 col-md-2">
+					<div id="oneblock{{ count +1}}">
+						<form action={{ url_for('insert')}} method="post">
+							Block : <input name="BlockID" id="block{{count +1}}" class="form-control disabled" readonly="readonly" rows="1" value="{{count +1}}"></input>
+							TimeStamp : <input name="TimeStamp" id="timestamp{{count+1}}" class="form-control disabled" rows="1" readonly="readonly"></input>
+							Nonce : <input name="Nonce" id="nonce{{ count +1}}" class="form-control" rows="1"></input>
+							Data : <textarea name="Data" id="data{{ count +1}}" class="form-control" rows="5"></textarea>
+							<br>
+							<div id="calculate" class="bs-example">
+								<button class="btn btn-block" type="button">calculate</button>
+							</div>
+							prehash : <input name="Prehash" id="preoutput{{ count +1}}" class="form-control disabled" readonly="readonly" rows="1" style="text-align: center" value=""></input>
+							hash : <input name="Hash" id="output{{ count +1}}" class="form-control disabled" readonly="readonly" rows="1" style="text-align: center" value=""></input>
+							<button class="btn btn-block btn-primary disabled nodata" id="novalue" type="button">Sumbit</button>
+						</form>
+							<script>
+							var preoutput{{count+1}} = document.getElementById('output{{count}}').value;
+							document.getElementById('preoutput{{count+1}}').value = preoutput{{count+1}};
+							function calculate(){
+								var block = document.getElementById('block{{count +1}}').value;
+								var timestamp = document.getElementById('nowtime').innerHTML;
+								var nonce = document.getElementById('nonce{{count +1}}').value;
+								var data = document.getElementById('data{{count +1}}').value;
+								var preoutput = document.getElementById('preoutput{{count +1}}').value;
+								var input = block + timestamp + nonce + data + preoutput;
+								var output = sha256(input);
+								console.log(data);
+								var culnonce = 0;
+								while(!(output.substr(0,4)==="0000")){
+									culnonce++;
+									input =   block + timestamp + culnonce + data + preoutput;
+									output = sha256(input);
+								}
+								document.getElementById("oneblock{{count+1}}").style.borderColor="blue";
+								document.getElementById('nonce{{count+1}}').value = culnonce;
+								document.getElementById('data{{count +1}}').value = data;
+								document.getElementById('timestamp{{count+1}}').value = timestamp;
+								document.getElementById('output{{count+1}}').value = output;
+								document.getElementById('novalue').removeAttribute("class");
+								document.getElementById('novalue').setAttribute("class","btn btn-block btn-primary");
+								document.getElementById('novalue').setAttribute("type","submit");
+							}
+							function check(){
+								var block = document.getElementById('block{{count +1}}').value;
+								var timestamp = document.getElementById('timestamp{{count+1}}').value;
+								var nonce = document.getElementById('nonce{{count +1}}').value;
+								var data = document.getElementById('data{{count +1}}').value;
+								var preoutput = document.getElementById('preoutput{{count +1}}').value;
+								var input = block + timestamp + nonce + data + preoutput;
+								var output = sha256(input);
+								document.getElementById('output{{count+1}}').value = output;
+								if(output.substr(0,4)==="0000"){
+									document.getElementById("oneblock{{count+1}}").style.borderColor="blue";
+									document.getElementById('novalue').removeAttribute("class");
+									document.getElementById('novalue').setAttribute("class","btn btn-block btn-primary");
+									document.getElementById('novalue').setAttribute("type","submit");
+								}else{
+									document.getElementById("oneblock{{count+1}}").style.borderColor="red";
+									document.getElementById('novalue').removeAttribute("class");
+									document.getElementById('novalue').setAttribute("class","btn btn-block btn-primary disabled");
+									document.getElementById('novalue').setAttribute("type","button");
+								}
+								if(document.getElementById("oneblock{{count}}").style.borderColor=="red"){
+									document.getElementById("oneblock{{count+1}}").style.borderColor="red";
+									document.getElementById('novalue').removeAttribute("class");
+									document.getElementById('novalue').setAttribute("class","btn btn-block btn-primary disabled");
+									document.getElementById('novalue').setAttribute("type","button");
+								}
+								setTimeout('check()',100);
+							}
+						</script>
+						<script>
+							if("{{flag}}"!=''){
+								alert("{{flag}}\nPlease try again ! ");
+							}
+						</script>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
